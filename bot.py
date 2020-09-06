@@ -4,12 +4,11 @@ import requests
 from dotenv import load_dotenv
 import shlex
 import requests
+from bs4 import BeautifulSoup
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 client = discord.Client()
-
-market = {}
 
 @client.event
 async def on_ready():
@@ -17,44 +16,23 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.content.startswith('!test'):
+    if message.content.startswith('!ops'):
         channel = message.channel
-        await channel.send('Bot message!')
-        
-    elif message.content.startswith('!market'):
-        channel = message.channel
-
         text = message.content
         textList = shlex.split(text)
-        user = message.author
+        user = textList[1]
 
-        if textList[1] == 'add':
-            item = textList[2]
-            price = textList[3]
-            description = textList[4]
+        r = requests.get('https://r6.tracker.network/profile/pc/' + user + '/operators?seasonal=1')
+        text = r.text
+        soup = BeautifulSoup(text, features="html.parser")
+        attackers = soup.find_all('table', { 'id' : 'operators-Attackers' })[0].find_all('span')
+        defenders = soup.find_all('table', { 'id' : 'operators-Defenders' })[0].find_all('span')
 
-            s = str(user) + " is selling " + item + " for **" + price + "**. Description: " + description
+        s = 'Top 3 attackers: ' + attackers[0].text.title() + ', ' + attackers[2].text.title() + ', ' + attackers[4].text.title() + \
+                '\nTop 3 defenders: ' + defenders[0].text.title() + ', ' + defenders[2].text.title() + ', ' + defenders[4].text.title()
 
-            if item in market:
-                market[item].append(s)
-            else:
-                market[item] = [s]
-    
-        if textList[1] == 'search':
-            item = textList[2]
-
-            if item in market:
-                s = ""
-                listings = market[item]
-                for x in listings:
-                    s += x + "\n"
-                await channel.send(s)
-                    
-            else:
-                await channel.send("Sorry, there are no listings for " + item + ".")
-
-    elif message.content.startswith('!ops'):
-        pass
+        await channel.send(s)
+        
     elif message.content.startswith('!stats'):
         #some setup Stuff
         channel = message.channel
