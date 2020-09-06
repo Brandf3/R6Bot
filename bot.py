@@ -2,6 +2,7 @@ import os
 import discord
 from dotenv import load_dotenv
 import shlex
+import requests
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -58,6 +59,19 @@ async def on_message(message):
     elif message.content.startswith('!mmr'):
         pass
     elif message.content.startswith('!wins'):
-        pass
+        channel = message.channel
+
+        text = message.content
+        textList = shlex.split(text)
+        user = textList[1]
+
+        r = requests.get('https://r6.tracker.network/profile/pc/' + user)
+        stats = r.text
+        index = stats.find('PVPMatchesWon')
+        index += 16
+        index2 = index + stats[index:].find('<') - 1
+        wins = stats[index:index2]
+        s = user + " has " + wins + " wins."
+        await channel.send(s)
 
 client.run(TOKEN)
