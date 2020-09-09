@@ -1,10 +1,10 @@
 import os
 import discord
-import requests
 from dotenv import load_dotenv
 import shlex
 import requests
 from bs4 import BeautifulSoup
+
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -46,21 +46,18 @@ async def on_message(message):
         # get WinLoss
         index1 = stats.find('PVPWLRatio')
         index1 += 13
-        index2 = index1 + 5
+        index2 = stats.find('<', index1) - 1
         winLoss = stats[index1:index2]
         # Get KD
         index1 = stats.find('PVPKDRatio')
         index1 += 13
-        index2 = index1 + 4
+        index2 = stats.find('<', index1) - 1
         killDeath = stats[index1:index2]
         # Get headshot Percent
         index1 = stats.find('PVPAccuracy')
         index1 += 14
-        index2 = index1 + 6
+        index2 = stats.find('<', index1) - 1
         headShotPercent = stats[index1:index2]
-        print(winLoss)
-        print(killDeath)
-        print(headShotPercent)
         s = user + ":" + \
                    "\n    WL: " + winLoss + \
                    "\n    KD: " + killDeath + \
